@@ -1,4 +1,4 @@
-version: '3'
+version: '3.8'
 services:
   nginx:
     restart: always
@@ -9,6 +9,13 @@ services:
       - '3050:80'
   db:
     image: 'postgres:latest'
+    environment:
+      - POSTGRES_PASSWORD=abcd1234
+      - POSTGRES_USER=gvdk
+      - POSTGRES_DB=app4
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    volumes:
+      - db_data:/var/lib/postgresql/data/pgdata
   redis:
     image: 'redis:latest'
   api:
@@ -16,16 +23,15 @@ services:
       context: ./server
       dockerfile: Dockerfile.dev
     depends_on:
-      - 'db'
-      - 'redis'
+      - db
+      - redis
     volumes:
       - /app/node_modules
       - ./server:/app
     environment:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
-      - POSTGRES_PASSWORD=abcd1234
-      - PG_USER=admin
+      - PG_USER=gvdk
       - PG_HOST=db
       - PG_DATABASE=app4
       - PG_PASSWORD=abcd1234
@@ -42,9 +48,15 @@ services:
     build:
       context: ./worker
       dockerfile: Dockerfile.dev
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
     depends_on:
-      - 'db'
-      - 'redis'
+      - db
+      - redis
     volumes:
       - /app/node_modules
       - ./worker:/app
+
+volumes:
+  db_data:
